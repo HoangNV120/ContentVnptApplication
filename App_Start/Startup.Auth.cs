@@ -99,7 +99,8 @@ namespace ContentVnptApplication
                     {
                         UserName = email,
                         Email = email,
-                        FullName = "Administrator"
+                        FullName = "Administrator",
+                        CreatedAt = DateTime.Now
                     };
 
                     userManager.Create(user, "Admin@123");
