@@ -1,0 +1,384 @@
+﻿@model ContentVnptApplication.ViewModel.PagedViewModel<ContentVnptApplication.Models.Banner>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<style>
+
+    .banner-thumb {
+        width: 120px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #eee;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+        .action-group form {
+            margin: 0;
+        }
+
+    .modal-image-preview {
+        width: 100%;
+        height: 240px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #ddd;
+        background: #f8f9fa;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    <h3 class="mb-0">
+        Quản lý Banner
+    </h3>
+
+    <button class="btn btn-primary mb-3" onclick="openCreate()">
+        ➕ Thêm Banner
+    </button>
+
+</div>
+
+<!-- SEARCH -->
+<form method="get" class="mb-4">
+
+    <div class="input-group">
+
+        <input type="text"
+               name="keyword"
+               value="@ViewBag.Keyword"
+               class="form-control"
+               placeholder="Tìm banner..." />
+
+        <button class="btn btn-primary">
+            Tìm kiếm
+        </button>
+
+    </div>
+
+</form>
+
+@if (Model == null || Model.Items.Count == 0)
+{
+    <div class="alert alert-info">
+        Chưa có banner nào
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-hover bg-white align-middle">
+
+            <thead class="table-dark">
+
+                <tr>
+                    <th width="140">Ảnh</th>
+                    <th>Tiêu đề</th>
+                    <th width="180">Hiển thị</th>
+                    <th width="240">Hành động</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+
+                        <td>
+                            <img src="@item.ImageUrl"
+                                 class="banner-thumb" />
+                        </td>
+
+                        <td>
+                            <strong>@item.Title</strong>
+                        </td>
+
+                        <td>
+
+                            @if (item.DisplayOrder == 1)
+                            {
+                                <span class="badge bg-success">
+                                    Đang hiển thị
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    Không hiển thị
+                                </span>
+                            }
+
+                        </td>
+
+                        <td>
+
+                            <div class="action-group">
+
+                                <button type="button"
+                                        class="btn btn-warning btn-sm"
+                                        data-model="@Html.Raw(HttpUtility.HtmlAttributeEncode(Newtonsoft.Json.JsonConvert.SerializeObject(item)))"
+                                        onclick="openEdit(this)">
+                                    Sửa
+                                </button>
+
+                                @using (Html.BeginForm(
+                                    "SetActive",
+                                    "AdminBanner",
+                                    new { area = "Admin", id = item.Id },
+                                    FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+
+                                    <button class="btn btn-success btn-sm">
+                                        Hiển thị
+                                    </button>
+                                }
+
+                                @using (Html.BeginForm(
+                                    "Delete",
+                                    "AdminBanner",
+                                    new { area = "Admin", id = item.Id },
+                                    FormMethod.Post,
+                                    new
+                                    {
+                                        onsubmit = "return confirm('Xóa banner này?')"
+                                    }))
+                                {
+                                    @Html.AntiForgeryToken()
+
+                                    <button class="btn btn-danger btn-sm">
+                                        Xóa
+                                    </button>
+                                }
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- PAGING -->
+    <nav class="mt-4">
+
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+
+                <a class="page-link"
+                   href="?page=@(Model.Page - 1)&keyword=@ViewBag.Keyword">
+                    Previous
+                </a>
+
+            </li>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+
+                    <a class="page-link"
+                       href="?page=@i&keyword=@ViewBag.Keyword">
+                        @i
+                    </a>
+
+                </li>
+            }
+
+            <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+
+                <a class="page-link"
+                   href="?page=@(Model.Page + 1)&keyword=@ViewBag.Keyword">
+                    Next
+                </a>
+
+            </li>
+
+        </ul>
+
+    </nav>
+}
+
+<!-- MODAL -->
+<!-- MODAL -->
+<div class="modal fade" id="bannerModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 id="modalTitle">Banner</h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <form id="bannerForm"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+
+                    <input type="hidden"
+                           id="Id"
+                           name="Id" />
+
+                    <div class="mb-3">
+                        <label class="fw-bold">
+                            Tiêu đề
+                        </label>
+
+                        <input id="Title"
+                               name="Title"
+                               class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="fw-bold">
+                            Upload ảnh (định dạng jpeg, jpg, png, webp)(tối đa 10Mb)
+                        </label>
+
+                        <input type="file"
+                               id="ImageFile"
+                               name="ImageFile"
+                               class="form-control"
+                               accept="image/*" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <img id="previewImage"
+                             src="https://placehold.co/600x300?text=Preview"
+                             style="width:100%;
+                                    height:250px;
+                                    object-fit:cover;
+                                    border-radius:10px;
+                                    border:1px solid #ddd;" />
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100">
+                        Lưu Banner
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+    var modal = new bootstrap.Modal(
+        document.getElementById('bannerModal')
+    );
+
+    function openCreate() {
+
+        document.getElementById("modalTitle").innerText =
+            "Thêm Banner";
+
+        document.getElementById("bannerForm").action =
+            '@Url.Action("Create", "AdminBanner", new { area = "Admin" })';
+
+        document.getElementById("Id").value = "";
+
+        document.getElementById("Title").value = "";
+
+        document.getElementById("ImageFile").value = "";
+
+        document.getElementById("previewImage").src =
+            "https://placehold.co/600x300?text=Preview";
+
+        modal.show();
+    }
+
+    function openEdit(btn) {
+
+        var model = JSON.parse(btn.dataset.model);
+
+        document.getElementById("modalTitle").innerText =
+            "Sửa Banner";
+
+        document.getElementById("bannerForm").action =
+            '@Url.Action("Edit", "AdminBanner", new { area = "Admin" })';
+
+        document.getElementById("Id").value =
+            model.Id;
+
+        document.getElementById("Title").value =
+            model.Title;
+
+        document.getElementById("ImageFile").value = "";
+
+        document.getElementById("previewImage").src =
+            model.ImageUrl;
+
+        modal.show();
+    }
+
+    document.getElementById("ImageFile")
+        .addEventListener("change", function (e) {
+
+            const file = e.target.files[0];
+
+            if (!file) return;
+
+            document.getElementById("previewImage").src =
+                URL.createObjectURL(file);
+        });
+
+    document.getElementById("ImageFile")
+        .addEventListener("change", function (e) {
+
+            const file = e.target.files[0];
+
+            if (!file) return;
+
+            const allowed = ["image/jpeg", "image/png", "image/webp"];
+
+            if (!allowed.includes(file.type)) {
+                alert("Chỉ cho phép file ảnh (jpg, png, webp)");
+                this.value = "";
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert("File không được vượt quá 10MB");
+                this.value = "";
+                return;
+            }
+
+            document.getElementById("previewImage").src =
+                URL.createObjectURL(file);
+        });
+
+</script>

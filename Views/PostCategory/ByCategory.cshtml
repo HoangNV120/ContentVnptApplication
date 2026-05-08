@@ -1,0 +1,94 @@
+﻿@model ContentVnptApplication.ViewModel.PagedViewModel<ContentVnptApplication.ViewModel.PostViewModel>
+
+@{ 
+    ViewBag.Title = ViewBag.CategoryName;
+}
+<div class="container mt-4">
+
+    <h3 class="mb-4">@ViewBag.CategoryName</h3>
+
+    <form method="get" class="mb-3">
+
+        <input type="hidden" name="slug" value="@ViewBag.Slug" />
+
+        <input type="text"
+               name="keyword"
+               value="@ViewBag.Keyword"
+               class="form-control"
+               placeholder="Tìm bài viết..." />
+
+    </form>
+
+    @if (Model == null || Model.Items == null || !Model.Items.Any())
+    {
+        <p>Chưa có bài viết trong danh mục này</p>
+    }
+    else
+    {
+        foreach (var item in Model.Items)
+        {
+            <a href="/post/@item.Slug" style="text-decoration:none; color:inherit;">
+                <div class="d-flex mb-4 p-3 bg-white rounded shadow-sm">
+
+                    <img src="@(string.IsNullOrEmpty(item.ImageUrl)
+                                ? "/images/default.png"
+                                : item.ImageUrl)"
+                         style="width:200px; height:120px; object-fit:cover; border-radius:8px;" />
+
+                    <div class="ms-3 flex-grow-1">
+
+                        <div style="font-size:12px; color:gray;">
+                            @(item.Created.ToString("dd/MM/yyyy")) |
+                            @(item.Author ?? "Admin")
+                        </div>
+
+                        <div style="font-weight:600; font-size:18px;">
+                            @item.Title
+                        </div>
+
+                        <div style="color:#555; margin-top:5px;">
+                            @(item.PostBrief?.Length > 150
+                                ? item.PostBrief.Substring(0, 150) + "..."
+                                : item.PostBrief)
+                        </div>
+
+                    </div>
+
+                </div>
+            </a>
+        }
+    }
+
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+
+        <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+            <a class="page-link"
+               href="/category/@ViewBag.Slug?page=@(Model.Page - 1)&keyword=@ViewBag.Keyword">
+                Previous
+            </a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.Page ? "active" : "")">
+
+                <a class="page-link"
+                   href="/category/@ViewBag.Slug?page=@i&keyword=@ViewBag.Keyword">
+                    @i
+                </a>
+
+            </li>
+        }
+
+        <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+            <a class="page-link"
+               href="/category/@ViewBag.Slug?page=@(Model.Page + 1)&keyword=@ViewBag.Keyword">
+                Next
+            </a>
+        </li>
+
+    </ul>
+</nav>
+
+</div>

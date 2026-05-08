@@ -1,0 +1,142 @@
+﻿@using Microsoft.AspNet.Identity
+
+@using System.Security.Claims
+
+@{
+    var identity = (ClaimsIdentity)User.Identity;
+    var fullName = identity.FindFirst("FullName")?.Value;
+}
+
+<style>
+    .user-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 16px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.12);
+        color: white !important;
+        text-decoration: none;
+        font-weight: 500;
+        transition: 0.25s;
+        backdrop-filter: blur(4px);
+    }
+
+        .user-profile:hover {
+            background: rgba(255,255,255,0.2);
+            color: #ffd166 !important;
+            transform: translateY(-1px);
+        }
+
+    .btn-logout {
+        border: none;
+        background: linear-gradient(135deg, #ffb703, #fb8500);
+        color: white;
+        padding: 7px 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.25s;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+    .auth-box {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-register {
+        background: transparent;
+        border: 1.5px solid rgba(255,255,255,0.6);
+        color: white !important;
+        padding: 7px 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.25s;
+    }
+
+        .btn-register:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: white;
+            transform: translateY(-2px);
+        }
+
+    .btn-login {
+        background: white;
+        color: #0d3b66 !important;
+        padding: 7px 18px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.25s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+        .btn-login:hover {
+            background: #ffd166;
+            color: #000 !important;
+            transform: translateY(-2px);
+        }
+</style>
+
+@if (Request.IsAuthenticated)
+{
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="user-box">
+
+            <a class="user-profile"
+               href="/Manage/Index">
+
+                <span>👤</span>
+                <span>@fullName</span>
+
+            </a>
+
+            <a class="btn-logout"
+               href="javascript:document.getElementById('logoutForm').submit()">
+
+                Đăng xuất
+
+            </a>
+
+        </div>
+    }
+}
+else
+{
+    <div class="auth-box">
+
+        @Html.ActionLink(
+            "Đăng kí",
+            "Register",
+            "Account",
+            null,
+            new { @class = "btn-register" }
+        )
+
+        @Html.ActionLink(
+            "Đăng nhập",
+            "Login",
+            "Account",
+            null,
+            new { @class = "btn-login" }
+        )
+
+    </div>
+}

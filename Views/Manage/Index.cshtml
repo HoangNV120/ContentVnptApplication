@@ -1,0 +1,84 @@
+﻿@model ContentVnptApplication.Models.IndexViewModel
+
+@{
+    ViewBag.Title = "Thông tin tài khoản";
+}
+
+<div class="container mt-4">
+
+    <h3 class="mb-3">Thông tin tài khoản</h3>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+
+                    <h5 class="mt-2">@Model.UserName</h5>
+                    <p class="text-muted">@Model.Email</p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+
+            @using (Html.BeginForm("UpdateProfile", "Manage", FormMethod.Post))
+             {
+                @Html.AntiForgeryToken()
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+
+                        <h5>Thông tin cá nhân</h5>
+                        <hr />
+
+                        <div class="mb-3">
+                            <label class="form-label">Họ tên</label>
+                            @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-danger" })
+                            <input name="FullName"
+                                   class="form-control"
+                                   value="@Model.FullName" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại</label>
+                            @Html.ValidationMessageFor(m => m.PhoneNumber, "", new { @class = "text-danger" })
+                            <input name="PhoneNumber"
+                                   class="form-control"
+                                   value="@Model.PhoneNumber" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+                            <input name="Address"
+                                   class="form-control"
+                                   value="@Model.Address" />
+                        </div>
+
+                        <button class="btn btn-primary">
+                            Lưu thay đổi
+                        </button>
+
+                    </div>
+                </div>
+             }
+
+            <div class="card mt-3 shadow-sm">
+                <div class="card-body">
+
+                    <h5>Bảo mật</h5>
+
+                    <a class="btn btn-warning"
+                       href="/Manage/ChangePassword">
+                        Đổi mật khẩu
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>

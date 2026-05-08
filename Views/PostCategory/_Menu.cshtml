@@ -1,0 +1,11 @@
+﻿@model IEnumerable<ContentVnptApplication.Models.PostCategory>
+
+@foreach (var item in Model)
+{
+    <li class="nav-item">
+        @Html.ActionLink(item.Title, "Category", "Post",
+            new { id = item.Id },
+            new { @class = "nav-link" })
+    </li>
+}
+

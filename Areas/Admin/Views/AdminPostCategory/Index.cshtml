@@ -1,0 +1,144 @@
+﻿@model ContentVnptApplication.ViewModel.PagedViewModel<ContentVnptApplication.ViewModel.PostCategoryViewModel>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var edit = ViewBag.EditCategory as ContentVnptApplication.ViewModel.PostCategoryViewModel;
+}
+
+<h3>Quản lý danh mục bài viết</h3>
+
+<button class="btn btn-primary mb-3" onclick="openCreate()">
+    ➕ Thêm danh mục
+</button>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text"
+               name="keyword"
+               value="@ViewBag.Keyword"
+               class="form-control"
+               placeholder="Tìm danh mục..." />
+
+        <button class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</form>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<table class="table table-bordered bg-white">
+    <thead class="table-dark">
+        <tr>
+            <th>Tên danh mục</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td><strong>@item.Title</strong></td>
+                <td>
+                    <button class="btn btn-warning btn-sm"
+                            onclick="openEdit(@item.Id, '@item.Title')">
+                        Sửa
+                    </button>
+
+                    <a href="/AdminPostCategory/Delete/@item.Id"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Xóa danh mục?')">
+                        Xóa
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+
+        <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+            <a class="page-link"
+               href="?page=@(Model.Page - 1)&keyword=@ViewBag.Keyword">
+                Previous
+            </a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.Page ? "active" : "")">
+                <a class="page-link"
+                   href="?page=@i&keyword=@ViewBag.Keyword">
+                    @i
+                </a>
+            </li>
+        }
+
+        <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+            <a class="page-link"
+               href="?page=@(Model.Page + 1)&keyword=@ViewBag.Keyword">
+                Next
+            </a>
+        </li>
+
+    </ul>
+</nav>
+<div class="modal fade" id="categoryModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 id="modalTitle">Danh mục</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            @using (Html.BeginForm("Save", "AdminPostCategory", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+
+                    <input type="hidden" id="Id" name="Id" />
+
+                    <div class="mb-2">
+                        <label>Tên danh mục</label>
+                        <input id="Title" name="Title" class="form-control" />
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100">Lưu</button>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    var modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+
+    function openCreate() {
+        document.getElementById("modalTitle").innerText = "Thêm danh mục";
+
+        document.getElementById("Id").value = 0;
+        document.getElementById("Title").value = "";
+
+        modal.show();
+    }
+
+    function openEdit(id, title, desc) {
+        document.getElementById("modalTitle").innerText = "Sửa danh mục";
+
+        document.getElementById("Id").value = id;
+        document.getElementById("Title").value = title;
+
+        modal.show();
+    }
+</script>

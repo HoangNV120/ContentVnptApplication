@@ -1,0 +1,112 @@
+﻿@model ContentVnptApplication.ViewModel.PagedViewModel<ContentVnptApplication.Models.ApplicationUser>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h3 class="mb-3">Quản lý Người Dùng</h3>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text"
+               name="keyword"
+               value="@ViewBag.Keyword"
+               class="form-control"
+               placeholder="Tìm theo username/gmail..." />
+
+        <button class="btn btn-primary">Tìm kiếm</button>
+    </div>
+</form>
+
+<table class="table table-hover table-bordered bg-white">
+    <thead class="table-dark">
+        <tr>
+            <th>Họ tên</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Trạng thái</th>
+            <th>SĐT</th>
+            <th>Địa chỉ</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.FullName</td>
+                <td>@item.UserName</td>
+                <td>@item.Email</td>
+
+                <td>
+                    @if (item.IsBanned)
+                    {
+                        <span class="badge bg-danger">Bị khoá</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Hoạt động</span>
+                    }
+                </td>
+
+                <td>@item.PhoneNumber</td>
+                <td>@item.Address</td>
+
+                <td>
+                    @if (!item.IsBanned)
+                    {
+                        <a href="/AdminUser/Ban/@item.Id"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Khoá user này?')">
+                            Ban
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/AdminUser/Unban/@item.Id"
+                           class="btn btn-success btn-sm"
+                           onclick="return confirm('Mở khoá user này?')">
+                            Unban
+                        </a>
+                    }
+
+                    <a href="/AdminUser/Delete/@item.Id"
+                       class="btn btn-secondary btn-sm"
+                       onclick="return confirm('Xoá user?')">
+                        Xoá
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+
+        <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+            <a class="page-link"
+               href="?page=@(Model.Page - 1)&keyword=@ViewBag.Keyword">
+                Previous
+            </a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.Page ? "active" : "")">
+                <a class="page-link"
+                   href="?page=@i&keyword=@ViewBag.Keyword">
+                    @i
+                </a>
+            </li>
+        }
+
+        <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+            <a class="page-link"
+               href="?page=@(Model.Page + 1)&keyword=@ViewBag.Keyword">
+                Next
+            </a>
+        </li>
+
+    </ul>
+</nav>

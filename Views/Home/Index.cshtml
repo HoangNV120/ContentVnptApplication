@@ -1,0 +1,134 @@
+﻿@model ContentVnptApplication.ViewModel.PagedViewModel<ContentVnptApplication.ViewModel.PostViewModel>
+
+@{
+    ViewBag.Title = "Trang chủ";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    body {
+        background: #f5f6fa;
+    }
+
+    .post-card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .post-img {
+        height: 180px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .post-title {
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    .post-desc {
+        font-size: 14px;
+        color: #555;
+        margin-top: 5px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .post-meta {
+        font-size: 12px;
+        color: gray;
+        margin-bottom: 8px;
+    }
+
+    .empty-box {
+        text-align: center;
+        margin-top: 80px;
+    }
+
+        .empty-box h4 {
+            font-weight: 600;
+        }
+</style>
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">Bài viết mới</h3>
+
+    @if (Model == null)
+    {
+        <div class="empty-box">
+            <h4>Chưa có bài viết nào được đăng</h4>
+            <p class="text-muted">Hãy quay lại sau nhé!</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col-md-4 mb-4">
+                    <a href="/post/@item.Slug" style="text-decoration:none; color:inherit;">
+                        <div class="card post-card">
+
+                            <img src="@(item.ImageUrl ?? "/images/default.png")" class="post-img" />
+
+                            <div class="card-body">
+
+                                <div class="post-meta">
+                                    @(item.Created.ToString("dd/MM/yyyy")) |
+                                    @(item.Author ?? "Admin") |
+                                    @(item.PostCategoryTitle ?? "Chưa phân loại")
+                                </div>
+
+                                <div class="post-title">
+                                    @item.Title
+                                </div>
+
+                                <div class="post-desc">
+                                    @(item.PostBrief?.Length > 120
+                                        ? item.PostBrief.Substring(0, 120) + "..."
+                                        : item.PostBrief)
+                                </div>
+
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                <a class="page-link" href="?page=@(Model.Page - 1)">Previous</a>
+            </li>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" href="?page=@i">@i</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="?page=@(Model.Page + 1)">Next</a>
+            </li>
+
+        </ul>
+    </nav>
+
+</div>

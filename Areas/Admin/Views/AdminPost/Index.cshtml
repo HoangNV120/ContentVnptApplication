@@ -1,0 +1,352 @@
+﻿@model ContentVnptApplication.ViewModel.PagedViewModel<ContentVnptApplication.ViewModel.PostViewModel>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+
+    var edit = ViewBag.EditPost as ContentVnptApplication.ViewModel.PostViewModel;
+    var categories = ViewBag.Categories as List<ContentVnptApplication.ViewModel.PostCategoryViewModel>;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<script src="~/Scripts/tinymce/tinymce.min.js"></script>
+
+<h3 class="mb-3">Quản lý bài viết</h3>
+
+<button class="btn btn-primary mb-3" onclick="openCreate()">
+    ➕ Thêm bài viết
+</button>
+
+<form method="get" class="mb-3">
+
+    <div class="input-group">
+        <input type="text"
+               name="keyword"
+               value="@ViewBag.Keyword"
+               class="form-control"
+               placeholder="Tìm bài viết theo tiêu đề..." />
+
+        <button class="btn btn-primary">
+            Tìm kiếm
+        </button>
+    </div>
+
+</form>
+
+@if (Model == null)
+{
+    <div class="alert alert-info">
+        Chưa có bài viết nào
+    </div>
+}
+else
+{
+    <table class="table table-hover table-bordered bg-white">
+        <thead class="table-dark">
+            <tr>
+                <th>Ảnh</th>
+                <th>Tiêu đề</th>
+                <th>Tác giả</th>
+                <th>Danh mục</th>
+                <th>Ngày tạo</th>
+                <th>Publish</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td style="width:100px;">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl)
+                        ? "/images/default.png"
+                        : item.ImageUrl)"
+                             style="width:70px;height:50px;object-fit:cover;border-radius:6px;" />
+                    </td>
+
+                    <td><strong>@item.Title</strong></td>
+
+                    <td>@item.Author</td>
+
+                    <td>
+                        @item.PostCategoryTitle
+                    </td>
+
+                    <td>@item.Created.ToString("dd/MM/yyyy")</td>
+
+                    <td>
+                        @if (item.IsPublished)
+                        {
+                            <span class="badge bg-success">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">No</span>
+                        }
+                    </td>
+
+                    <td>
+                        <button class="btn btn-warning btn-sm"
+                                data-model="@Html.Raw(HttpUtility.HtmlAttributeEncode(Newtonsoft.Json.JsonConvert.SerializeObject(item)))"
+                                onclick="openEdit(this)">
+                            Sửa
+                        </button>
+
+                        <a href="/AdminPost/Delete/@item.Id"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Xóa bài viết?')">
+                            Xóa
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                <a class="page-link"
+                   href="?page=@(Model.Page - 1)&keyword=@ViewBag.Keyword">
+                    Previous
+                </a>
+            </li>
+
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link"
+                       href="?page=@i&keyword=@ViewBag.Keyword">
+                        @i
+                    </a>
+                </li>
+            }
+
+            <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link"
+                   href="?page=@(Model.Page + 1)&keyword=@ViewBag.Keyword">
+                    Next
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+}
+<div class="modal fade" id="postModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 id="modalTitle">Bài viết</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            @using (Html.BeginForm("Save", "AdminPost", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="page"
+                       value="@Model.Page" />
+
+                <input type="hidden"
+                       name="keyword"
+                       value="@ViewBag.Keyword" />
+
+                <div class="modal-body">
+
+                    <input type="hidden" id="Id" name="Id" />
+
+                    <div class="mb-2">
+                        <label class="fw-bold">Tiêu đề</label>
+
+                        @Html.TextBox(
+                            "Title",
+                            null,
+                            new { @class = "form-control" }
+                        )
+
+                        @Html.ValidationMessage(
+                            "Title",
+                            "",
+                            new { @class = "text-danger" }
+                        )
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-bold">Tóm tắt (Brief)</label>
+                        <textarea id="PostBrief" name="PostBrief" class="form-control"
+                                  rows="3"
+                                  maxlength="300"
+                                  placeholder="Viết tóm tắt ngắn gọn bài viết..."></textarea>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-bold">Mô tả</label>
+                        <textarea id="Description" name="Description" class="form-control"></textarea>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-bold">Tác giả</label>
+                        <input id="Author" name="Author" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-bold">Image URL</label>
+                        <input id="ImageUrl" name="ImageUrl" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="fw-bold">Danh mục</label>
+                        <span class="text-danger" data-valmsg-for="PostCategoryId"></span>
+                        <select id="PostCategoryId" name="PostCategoryId" class="form-control">
+                            @foreach (var c in ViewBag.Categories)
+                            {
+                                <option value="@c.Id">@c.Title</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input"
+                               id="IsPublished" name="IsPublished" value="true" />
+                        <label class="form-check-label fw-bold">Published</label>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success w-100">
+                        Lưu
+                    </button>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+
+<script>
+    tinymce.init({
+        selector: '#Description',
+        license_key: 'gpl',
+        height: 300,
+    });
+</script>
+
+<script>
+    var modal = new bootstrap.Modal(document.getElementById('postModal'));
+
+    function setCategory(value) {
+        var select = document.getElementById("PostCategoryId");
+
+        var exists = false;
+
+        for (var i = 0; i < select.options.length; i++) {
+            if (select.options[i].value == value) {
+                exists = true;
+                break;
+            }
+        }
+
+        if (exists) {
+            select.value = value;
+        } else {
+            if (select.options.length > 0) {
+                select.selectedIndex = 0;
+            }
+        }
+    }
+
+    function openCreate() {
+        document.getElementById("modalTitle").innerText = "Thêm bài viết";
+
+        document.getElementById("Id").value = 0;
+        document.getElementById("Title").value = "";
+        document.getElementById("Author").value = "";
+        document.getElementById("ImageUrl").value = "";
+        document.getElementById("IsPublished").checked = false;
+        document.getElementById("PostBrief").value = "";
+
+        tinymce.get("Description").setContent("");
+
+        setCategory(null);
+        modal.show();
+    }
+
+    function openEdit(btn) {
+        var model = JSON.parse(btn.dataset.model);
+
+        document.getElementById("modalTitle").innerText = "Sửa bài viết";
+
+        document.getElementById("Id").value = model.Id;
+        document.getElementById("Title").value = model.Title;
+        document.getElementById("Author").value = model.Author;
+        document.getElementById("ImageUrl").value = model.ImageUrl;
+
+        document.getElementById("IsPublished").checked = model.IsPublished;
+
+        tinymce.get("Description").setContent(model.Description || "");
+        document.getElementById("PostBrief").value = model.PostBrief || "";
+
+        setCategory(model.PostCategoryId);
+
+        modal.show();
+    }
+
+    document.querySelector("form").addEventListener("submit", function () {
+        tinymce.triggerSave();
+    });
+
+    document.getElementById('postModal')
+        .addEventListener('hidden.bs.modal', function () {
+
+            document.getElementById("Id").value = 0;
+            document.getElementById("Title").value = "";
+            document.getElementById("Author").value = "";
+            document.getElementById("ImageUrl").value = "";
+            document.getElementById("PostBrief").value = "";
+
+            document.getElementById("IsPublished").checked = false;
+
+            tinymce.get("Description").setContent("");
+
+            setCategory(null);
+
+            document.querySelectorAll(".field-validation-error")
+                .forEach(x => x.innerHTML = "");
+
+            document.querySelectorAll(".input-validation-error")
+                .forEach(x => x.classList.remove("input-validation-error"));
+        });
+
+</script>
+
+@if (ViewBag.OpenModal != null)
+{
+    <script>
+        window.onload = function () {
+
+            var model = @Html.Raw(
+                Newtonsoft.Json.JsonConvert.SerializeObject(
+                    ViewBag.EditPost
+                )
+            );
+
+            openEdit({
+                dataset: {
+                    model: JSON.stringify(model)
+                }
+            });
+        };
+    </script>
+}
+
